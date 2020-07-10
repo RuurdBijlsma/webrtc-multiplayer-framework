@@ -1,24 +1,11 @@
-# test
+# webrtc-multiplayer-framework
+Browser framework that facilitates multiplayer connectivity.
 
-## Project setup
-```
-npm install
-```
+Works in connection with 
+* multi-signal-server - server software required for signalling between peers: https://github.com/ruurdbijlsma/multi-signal-server
+* multi-peer - browser package for server/client structure for peer to peer connections: https://github.com/RuurdBijlsma/multi-peer
 
-### Compiles and hot-reloads for development
+### npm install
 ```
-npm run serve
+this isn't an installable package yet :)
 ```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
