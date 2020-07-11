@@ -5,7 +5,7 @@ import Observable from "observable-slim";
 
 export default class MPServer extends MultiPeerServer {
     constructor(appName) {
-        super(appName);
+        super(appName, true);
 
         this.state = {};
         this.players = [];
@@ -36,8 +36,9 @@ export default class MPServer extends MultiPeerServer {
                 this.players.splice(i, 1);
         });
         this.on('data', (id, data) => {
+            console.log(data)
             let player = this.players.find(p => p.id === id);
-            let [action, ...rest] = JSON.parse(data);
+            let [action, ...rest] = data;
             switch (action) {
                 case serverAction.stateChange:
                     let [changeType, propertyString, value] = rest;

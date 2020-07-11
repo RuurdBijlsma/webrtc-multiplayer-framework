@@ -6,7 +6,7 @@ import Utils from "@/js/Utils";
 
 export default class MPClient extends MultiPeerClient {
     constructor(appName) {
-        super(appName);
+        super(appName, true);
         this.state = {};
         this.serverState = {};
 
@@ -18,7 +18,7 @@ export default class MPClient extends MultiPeerClient {
 
     setListeners() {
         this.on('data', (id, data) => {
-            let [action, ...rest] = JSON.parse(data);
+            let [action, ...rest] = data;
             switch (action) {
                 case clientAction.serverStateChange:
                     let [sChangeType, sPropertyString, sValue] = rest;

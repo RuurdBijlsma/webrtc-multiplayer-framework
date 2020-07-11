@@ -15,8 +15,6 @@
         name: 'Home',
         components: {},
         data: () => ({
-            server: new MultiPeerServer('test'),
-            client: new MultiPeerClient('test'),
             multiplayer: new Multiplayer('test'),
             multiplayer2: new Multiplayer('test'),
             clientText: '',
