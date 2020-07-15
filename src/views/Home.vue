@@ -6,11 +6,11 @@
         <!--        <p :key="updateKey">Actual server state:{{JSON.stringify(multiplayer.server.state)}}</p>-->
         <h2>Client 1 state</h2>
         <!--        <p :key="updateKey">Actual client1 state:{{JSON.stringify(multiplayer.client.state)}}</p>-->
-        <p :key="updateKey+4" v-for="player in multiplayer2.client.players">Client 2 {{player.id}}} state:{{JSON.stringify(player.state)}}</p>
+        <p :key="updateKey+4" v-for="player in multiplayer2.client.players">Client 2 {{player.id}} state:{{JSON.stringify(player.state)}}</p>
         <p :key="updateKey+5" v-if="multiplayer.server.players.find(p=>p.id===multiplayer.client.signal.id)">Server client1 state:{{JSON.stringify(multiplayer.server.players.find(p=>p.id===multiplayer.client.signal.id).state)}}</p>
         <h2>Client 2 state</h2>
         <!--        <p :key="updateKey">Actual client1 state:{{JSON.stringify(multiplayer.client.state)}}</p>-->
-        <p :key="updateKey+7" v-for="player in multiplayer.client.players">Client 1 {{player.id}}} state:{{JSON.stringify(player.state)}}</p>
+        <p :key="updateKey+7" v-for="player in multiplayer.client.players">Client 1 {{player.id}} state:{{JSON.stringify(player.state)}}</p>
         <p :key="updateKey+8" v-if="multiplayer.server.players.find(p=>p.id===multiplayer2.client.signal.id)">Server client2 state:{{JSON.stringify(multiplayer.server.players.find(p=>p.id===multiplayer2.client.signal.id).state)}}</p>
         <h2>Counts</h2>
         <p>Server player count {{multiplayer.server.players.length}}</p>
@@ -50,6 +50,11 @@
                 hello: 'world',
                 arr: [2],
                 health: 100,
+            }
+            this.multiplayer2.client.state = {
+                bye: 'world',
+                yarr: [2],
+                bealth: 100,
             }
             setTimeout(() => {
                 this.multiplayer.client.state.hello += 'bye';

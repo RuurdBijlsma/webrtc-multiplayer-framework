@@ -22,6 +22,7 @@ export default class MPClient extends MultiPeerClient {
 
     setListeners() {
         this.on('data', (id, data) => {
+            console.log("[CLIENT]data", data);
             let [action, ...rest] = this.stateUtils.receiveStateChange(id, data);
             switch (action) {
                 case actionType.stateChange:

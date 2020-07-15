@@ -19,18 +19,17 @@ export default class MPServer extends MultiPeerServer {
     setListeners() {
         this.on('full-connect', () => {
             console.log("Server full connect")
-            //Send every player's state to every other player
-            for (let playerA of this.players) {
-                for (let playerB of this.players.filter(p => p !== playerA)) {
-                    //Send to playerA: playerB's state
-                    this.stateUtils.sendStateChange(d => this.send(playerA.id, d), playerA.id, playerB.id, stateChangeType.reset, '', playerB.state);
-                }
-                this.stateUtils.sendStateChange(d => this.send(playerA.id, d), playerA.id, 0, stateChangeType.reset, '', this.state);
-            }
         });
         this.on('connect', id => {
             console.log("Server new connection", id, this.players);
-            this.players.push(new Player(id, this.peers[id]));
+            let newPlayer = new Player(id, this.peers[id]);
+            for (let player of this.players) {
+                console.log("Sending state data of player", player.id, "to player", id);
+                this.stateUtils.sendStateChange(d => this.send(id, d), id, player.id, stateChangeType.reset, '', player.state);
+                this.stateUtils.sendStateChange(d => this.send(player.id, d), player.id, id, stateChangeType.reset, '', newPlayer.state);
+            }
+            this.players.push(newPlayer);
+            this.stateUtils.sendStateChange(d => this.send(id, d), id, 0, stateChangeType.reset, '', this.state);
         });
         this.on('disconnect', id => {
             //Update remaining players that this player is gone!
@@ -41,7 +40,7 @@ export default class MPServer extends MultiPeerServer {
                 this.players.splice(i, 1);
         });
         this.on('data', (id, data) => {
-            console.log(data)
+            console.log("[SERVER]data", data);
             let player = this.players.find(p => p.id === id);
             let [action, ...rest] = this.stateUtils.receiveStateChange(id, data);
             switch (action) {
