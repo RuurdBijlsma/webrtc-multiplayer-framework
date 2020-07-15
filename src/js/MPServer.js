@@ -1,12 +1,16 @@
 import {MultiPeerServer} from "multi-peer";
-import {clientAction, serverAction, stateChangeType, stateChangeTypeNames} from './enums';
+import {actionType, stateChangeType, stateChangeTypeNames} from './enums';
 import Player from "@/js/Player";
 import Observable from "observable-slim";
+import StateUtils from "./StateUtils";
+//state change template
+//[action, stateChangeOrigin (0 or playerId), changeType, propertyName, value]
 
 export default class MPServer extends MultiPeerServer {
     constructor(appName) {
-        super(appName, true);
+        super(appName, false);
 
+        this.stateUtils = new StateUtils();
         this.state = {};
         this.players = [];
         this.setListeners();
@@ -14,13 +18,14 @@ export default class MPServer extends MultiPeerServer {
 
     setListeners() {
         this.on('full-connect', () => {
+            console.log("Server full connect")
             //Send every player's state to every other player
             for (let playerA of this.players) {
                 for (let playerB of this.players.filter(p => p !== playerA)) {
                     //Send to playerA: playerB's state
-                    this.send(playerA.id, [clientAction.playerStateChange, playerB.id, stateChangeType.reset, '', playerB.state])
+                    this.stateUtils.sendStateChange(d => this.send(playerA.id, d), playerA.id, playerB.id, stateChangeType.reset, '', playerB.state);
                 }
-                this.send(playerA.id, [clientAction.serverStateChange, stateChangeType.reset, '', this.state]);
+                this.stateUtils.sendStateChange(d => this.send(playerA.id, d), playerA.id, 0, stateChangeType.reset, '', this.state);
             }
         });
         this.on('connect', id => {
@@ -38,15 +43,15 @@ export default class MPServer extends MultiPeerServer {
         this.on('data', (id, data) => {
             console.log(data)
             let player = this.players.find(p => p.id === id);
-            let [action, ...rest] = data;
+            let [action, ...rest] = this.stateUtils.receiveStateChange(id, data);
             switch (action) {
-                case serverAction.stateChange:
-                    let [changeType, propertyString, value] = rest;
+                case actionType.stateChange:
+                    let [_, changeType, propertyString, value] = rest;
                     console.log('[SERVER]', {changeType: stateChangeTypeNames[changeType], propertyString, value});
                     for (let playerB of this.players.filter(p => p !== player)) {
-                        this.send(playerB.id, [clientAction.playerStateChange, player.id, changeType, propertyString, value])
+                        this.stateUtils.sendStateChange(d => this.send(playerB.id, d), playerB.id, player.id, changeType, propertyString, value);
                     }
-                    player.applyStateChange(changeType, propertyString, value);
+                    this.stateUtils.applyStateChange(player, 'state', changeType, propertyString, value);
                     this.emit("player-state-change", player);
                     break;
             }
@@ -58,11 +63,12 @@ export default class MPServer extends MultiPeerServer {
         this._state = Observable.create(value, false, changes => {
             console.log('[SERVER] state change', changes);
             for (let change of changes) {
-                this.broadcast([clientAction.serverStateChange, stateChangeType[change.type], change.currentPath, change.newValue]);
+                this.broadcast([actionType.stateChange, 0, stateChangeType[change.type], change.currentPath, change.newValue]);
+                this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', 0, stateChangeType[change.type], change.currentPath, change.newValue);
             }
         });
         console.log("[SERVER] sending reset action to all clients")
-        this.broadcast([clientAction.serverStateChange, stateChangeType.reset, '', value]);
+        this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', 0, stateChangeType.reset, '', value);
     }
 
     get state() {

@@ -1,7 +1,21 @@
 <template>
     <div class="home">
-        <span>Server state text field:</span><v-text-field v-model="multiplayer.server.state.text"></v-text-field>
-        <p :key="updateClient">Client server state:{{JSON.stringify(multiplayer2.client.serverState)}}</p>
+        <h2>Server state</h2>
+        <p :key="updateKey">Client 1 server state:{{JSON.stringify(multiplayer.client.serverState)}}</p>
+        <p :key="updateKey+1">Client 2 server state:{{JSON.stringify(multiplayer2.client.serverState)}}</p>
+        <!--        <p :key="updateKey">Actual server state:{{JSON.stringify(multiplayer.server.state)}}</p>-->
+        <h2>Client 1 state</h2>
+        <!--        <p :key="updateKey">Actual client1 state:{{JSON.stringify(multiplayer.client.state)}}</p>-->
+        <p :key="updateKey+4" v-for="player in multiplayer2.client.players">Client 2 {{player.id}}} state:{{JSON.stringify(player.state)}}</p>
+        <p :key="updateKey+5" v-if="multiplayer.server.players.find(p=>p.id===multiplayer.client.signal.id)">Server client1 state:{{JSON.stringify(multiplayer.server.players.find(p=>p.id===multiplayer.client.signal.id).state)}}</p>
+        <h2>Client 2 state</h2>
+        <!--        <p :key="updateKey">Actual client1 state:{{JSON.stringify(multiplayer.client.state)}}</p>-->
+        <p :key="updateKey+7" v-for="player in multiplayer.client.players">Client 1 {{player.id}}} state:{{JSON.stringify(player.state)}}</p>
+        <p :key="updateKey+8" v-if="multiplayer.server.players.find(p=>p.id===multiplayer2.client.signal.id)">Server client2 state:{{JSON.stringify(multiplayer.server.players.find(p=>p.id===multiplayer2.client.signal.id).state)}}</p>
+        <h2>Counts</h2>
+        <p>Server player count {{multiplayer.server.players.length}}</p>
+        <p>Client 1 player count {{multiplayer.client.players.length}}</p>
+        <p>Client 2 player count {{multiplayer2.client.players.length}}</p>
     </div>
 </template>
 
@@ -19,7 +33,7 @@
             multiplayer2: new Multiplayer('test'),
             clientText: '',
             serverText: '',
-            updateClient: 0,
+            updateKey: 0,
         }),
         async mounted() {
             // await this.server.connect('https://api.ruurd.dev');
@@ -41,11 +55,20 @@
                 this.multiplayer.client.state.hello += 'bye';
                 this.multiplayer.client.state.arr.push(5);
                 this.multiplayer.client.state.health -= 1;
+                this.multiplayer.client.state.health -= 1;
+                this.multiplayer.client.state.health -= 1;
+                this.multiplayer.client.state.health -= 1;
+                this.multiplayer.client.state.health -= 1;
                 this.multiplayer.client.state.wow = 'gang';
                 this.multiplayer.server.state.initional = 5;
                 this.multiplayer.server.state.text = 'asdf';
+                console.log(this.multiplayer);
             }, 100);
-            this.multiplayer2.client.on('server-state-change', () => this.updateClient++);
+            this.multiplayer.client.on('player-state-change', () => this.updateKey++);
+            this.multiplayer.client.on('server-state-change', () => this.updateKey++);
+            this.multiplayer.server.on('player-state-change', () => this.updateKey++);
+            this.multiplayer2.client.on('player-state-change', () => this.updateKey++);
+            this.multiplayer2.client.on('server-state-change', () => this.updateKey++);
         },
         beforeDestroy() {
             this.server.destroy();

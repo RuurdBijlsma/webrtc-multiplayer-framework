@@ -1,17 +1,10 @@
-export const serverAction = {
+export const actionType = {
     stateChange: 0,
+    smartStateChange: 1,
 }
-export const serverActionNames = {
+export const actionNames = {
     0: 'stateChange',
-}
-
-export const clientAction = {
-    playerStateChange: 0,
-    serverStateChange: 1,
-}
-export const clientActionNames = {
-    0: 'playerStateChange',
-    1: 'serverStateChange',
+    1: 'smartStateChange',
 }
 
 export const stateChangeType = {
