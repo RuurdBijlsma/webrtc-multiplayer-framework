@@ -5,6 +5,15 @@
 </template>
 
 <script>
+    // TODO:
+    // Add events to multiplayer class (connect/full-connect/data(cleaned))
+    // Make readme for users:
+    //  * Which action enums are reserved
+    //  * What format is data allowed to be sent? (array/anything?)
+    // Server should be able to change state of players which then propagates to clients
+    // Encourage users to create class for client code and class for server code
+    // Refactor Multiplayer class a bit to make it more easy to use maybe idk
+    // Multiplayer as lots of todo :)
     import Multiplayer from "../js/Multiplayer";
 
     export default {
