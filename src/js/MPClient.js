@@ -15,9 +15,15 @@ export default class MPClient extends MultiPeerClient {
         this.serverState = {};
 
         //Refers to players besides this client, i.e. other players
-        this.players = [];
+        this.otherPlayers = [];
+        this.me = new Player('me');
+        this.me.state = this.state;
 
         this.setListeners();
+    }
+
+    get players() {
+        return [...this.otherPlayers, this.me];
     }
 
     setListeners() {
@@ -33,11 +39,11 @@ export default class MPClient extends MultiPeerClient {
                         this.emit("server-state-change", this.serverState);
                     } else {
                         console.log("[CLIENT] Receiving state change event on player state")
-                        let player = this.players.find(p => p.id === stateOwner);
+                        let player = this.otherPlayers.find(p => p.id === stateOwner);
                         if (player === undefined) {
                             console.log("[CLIENT] Creating new player")
                             player = new Player(stateOwner, null);
-                            this.players.push(player);
+                            this.otherPlayers.push(player);
                         }
                         console.log('[CLIENT]', {
                             stateOwner,

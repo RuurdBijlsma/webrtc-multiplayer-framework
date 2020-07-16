@@ -1,5 +1,5 @@
 <template>
-    <div class="home">
+    <div class="test">
         <h2>Server state</h2>
         <p :key="updateKey">Client 1 server state:{{JSON.stringify(multiplayer.client.serverState)}}</p>
         <p :key="updateKey+1">Client 2 server state:{{JSON.stringify(multiplayer2.client.serverState)}}</p>
@@ -26,7 +26,7 @@
 
 
     export default {
-        name: 'Home',
+        name: 'Test',
         components: {},
         data: () => ({
             multiplayer: new Multiplayer('test'),
