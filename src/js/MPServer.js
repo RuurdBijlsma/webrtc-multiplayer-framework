@@ -34,6 +34,7 @@ export default class MPServer extends MultiPeerServer {
                 this.stateUtils.sendStateChange(d => this.send(player.id, d), player.id, new StateChange(actionType.stateChange, id, stateChangeType.reset, '', newPlayer.state));
             }
             this.players.push(newPlayer);
+            this.players.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
             this.stateUtils.sendStateChange(d => this.send(id, d), id, new StateChange(actionType.reset, 0, stateChangeType.reset, '', this.state));
 
             newPlayer.on('state-change', stateChange => {

@@ -51,6 +51,9 @@ export default class MPClient extends MultiPeerClient {
             this.stateUtils.sendStateChange(d => this.send(d), 0, stateChange);
             this.emit('player-private-state-change', this.me, stateChange);
         });
+        this.on('connect', id => {
+            this.me.id = this.signal.id;
+        });
         this.on('data', (id, data) => {
             console.log("[CLIENT]data", data);
             if (!Utils.isReservedData(data)) {
@@ -78,17 +81,17 @@ export default class MPClient extends MultiPeerClient {
             this.emit("server-state-change", this.serverState, stateChange);
         } else {
             console.log("[CLIENT] Player state change received", stateChange)
-            if (stateChange.stateOwner === this.signal.id) {
-                stateChange.stateOwner = 0;
-            }
+            // if (stateChange.stateOwner === this.signal.id) {
+            //     stateChange.stateOwner = 0;
+            // }
             let player = this.players.find(p => p.id === stateChange.stateOwner);
             if (player === undefined) {
                 console.log("[CLIENT] Creating new player")
                 player = new Player(stateChange.stateOwner);
                 this.otherPlayers.push(player);
                 this.players.push(player);
-                this.otherPlayers.sort((a, b) => +(a.id > b.id));
-                this.players.sort((a, b) => +(a.id > b.id));
+                this.players.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
+                this.otherPlayers.sort((a,b) => (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0));
             }
             let stateProperty = stateChange.action === actionType.stateChange ? 'state' : 'privateState';
             player.pauseObservable();
