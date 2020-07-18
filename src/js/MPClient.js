@@ -4,6 +4,7 @@ import {actionType, stateChangeType, stateChangeTypeNames} from './enums';
 import Player from "./Player";
 import StateUtils from "./StateUtils";
 import PrivatePlayer from "./PrivatePlayer";
+import Utils from "./Utils";
 //state change template
 //[action, stateChangeOrigin (0 or playerId), changeType, propertyName, value]
 
@@ -52,31 +53,44 @@ export default class MPClient extends MultiPeerClient {
         });
         this.on('data', (id, data) => {
             console.log("[CLIENT]data", data);
-            if (!StateUtils.isStateChange(data)) {
-                this.emit('message', data);
+            if (!Utils.isReservedData(data)) {
+                this.emit('message', id, data);
                 return;
             }
-            let stateChange = this.stateUtils.receiveStateChange(id, data);
-            if (stateChange.stateOwner === 0) {
-                console.log("[CLIENT] Server state change received", stateChange)
-                StateUtils.applyStateChange(this, 'serverState', stateChange);
-                this.emit("server-state-change", this.serverState, stateChange);
-            } else {
-                console.log("[CLIENT] Player state change received", stateChange)
-                let player = this.players.find(p => p.id === stateChange.stateOwner);
-                if (player === undefined) {
-                    console.log("[CLIENT] Creating new player")
-                    player = new Player(stateChange.stateOwner);
-                    this.otherPlayers.push(player);
-                    this.players.push(player);
-                    this.otherPlayers.sort((a, b) => +(a.id > b.id));
-                    this.players.sort((a, b) => +(a.id > b.id));
-                }
-                player.pauseObservable();
-                StateUtils.applyStateChange(player, 'state', stateChange, true);
-                player.resumeObservable();
-                this.emit("player-state-change", player, stateChange);
+            if (Utils.isStateChange(data)) {
+                this.handleStateChange(id, data);
+            }
+            if (data[0] === actionType.userDisconnect) {
+                let removedPlayerIndex = this.players.findIndex(p => p.id === data[1]);
+                if (removedPlayerIndex !== -1)
+                    this.players.splice(removedPlayerIndex);
+                else
+                    console.warn("[CLIENT] Removed player was not in players list");
             }
         });
+    }
+
+    handleStateChange(id, data) {
+        let stateChange = this.stateUtils.receiveStateChange(id, data);
+        if (stateChange.stateOwner === 0) {
+            console.log("[CLIENT] Server state change received", stateChange)
+            StateUtils.applyStateChange(this, 'serverState', stateChange);
+            this.emit("server-state-change", this.serverState, stateChange);
+        } else {
+            console.log("[CLIENT] Player state change received", stateChange)
+            let player = this.players.find(p => p.id === stateChange.stateOwner);
+            if (player === undefined) {
+                console.log("[CLIENT] Creating new player")
+                player = new Player(stateChange.stateOwner);
+                this.otherPlayers.push(player);
+                this.players.push(player);
+                this.otherPlayers.sort((a, b) => +(a.id > b.id));
+                this.players.sort((a, b) => +(a.id > b.id));
+            }
+            player.pauseObservable();
+            StateUtils.applyStateChange(player, 'state', stateChange, true);
+            player.resumeObservable();
+            this.emit("player-state-change", player, stateChange);
+        }
     }
 }

@@ -48,18 +48,6 @@ export default class StateUtils {
         return sendFunction(smart);
     }
 
-    static isStateChange(data) {
-        if (!Array.isArray(data)) {
-            return false;
-        }
-        return [
-            actionType.privateStateChange,
-            actionType.stateChange,
-            actionType.smartStateChange,
-            actionType.privateSmartStateChange
-        ].includes(data[0]);
-    }
-
     static applyStateChange(outerObject, statePropertyName, stateChange, pauseObservable) {
         if (pauseObservable && outerObject.pauseObservable !== undefined)
             outerObject.pauseObservable();

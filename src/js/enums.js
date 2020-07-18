@@ -3,12 +3,14 @@ export const actionType = {
     smartStateChange: 1,
     privateStateChange: 2,
     privateSmartStateChange: 3,
+    userDisconnect: 4,
 }
 export const actionNames = {
     0: 'stateChange',
     1: 'smartStateChange',
     2: 'privateStateChange',
     3: 'privateSmartStateChange',
+    4: 'userDisconnect',
 }
 
 export const stateChangeType = {
