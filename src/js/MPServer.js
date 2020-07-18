@@ -35,6 +35,15 @@ export default class MPServer extends MultiPeerServer {
             }
             this.players.push(newPlayer);
             this.stateUtils.sendStateChange(d => this.send(id, d), id, new StateChange(actionType.reset, 0, stateChangeType.reset, '', this.state));
+
+            newPlayer.on('state-change', stateChange => {
+                this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', stateChange);
+                this.emit("player-state-change", newPlayer, stateChange);
+            });
+            newPlayer.on('private-state-change', stateChange => {
+                this.stateUtils.sendStateChange(d => this.send(id, d), id, stateChange);
+                this.emit("player-private-state-change", newPlayer, stateChange);
+            });
         });
         this.on('disconnect', id => {
             //TODO Update remaining players that this player is gone!
@@ -42,6 +51,7 @@ export default class MPServer extends MultiPeerServer {
             if (i === -1)
                 console.warn("Player disconnected that was not in server player list");
             else {
+                this.players[i].destroy();
                 this.players.splice(i, 1);
                 this.broadcast([actionType.userDisconnect, id]);
             }

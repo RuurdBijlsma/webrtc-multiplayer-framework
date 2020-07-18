@@ -1,5 +1,6 @@
 <template>
     <div class="platformer">
+        <v-btn v-if="host" @click="serverAction">Server action</v-btn>
         <canvas ref="canvas" class="canvas" width="500" height="500" @click="changeBallPos"></canvas>
     </div>
 </template>
@@ -58,6 +59,10 @@
                     this.context.fillStyle = player.state.color;
                     this.context.fillRect(player.state.ball?.x, player.state.ball?.y, 10, 10);
                 }
+            },
+            serverAction() {
+                this.mp.server.players.forEach(p => p.state.ball = {x: Math.random() * this.canvas.width, y: Math.random() * this.canvas.height})
+                this.mp.server.players.forEach(p => p.privateState.yolo = 'bork')
             },
             changeBallPos(e) {
                 let {top, left} = this.canvas.getBoundingClientRect();

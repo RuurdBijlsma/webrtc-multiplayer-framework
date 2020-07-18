@@ -45,6 +45,7 @@ export default class StateUtils {
             this.lastSends[recipient] = [];
         let smart = this.toSmart(this.lastSends[recipient], stateChange.array);
         this.lastSends[recipient] = stateChange.array;
+        console.log('sending', smart);
         return sendFunction(smart);
     }
 

@@ -17,4 +17,8 @@ export default class Player extends EventEmitter {
     resumeObservable() {
         // Only relevant for child class PrivatePlayer.js
     }
+
+    destroy() {
+        this.removeAllListeners();
+    }
 }

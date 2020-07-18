@@ -78,6 +78,9 @@ export default class MPClient extends MultiPeerClient {
             this.emit("server-state-change", this.serverState, stateChange);
         } else {
             console.log("[CLIENT] Player state change received", stateChange)
+            if (stateChange.stateOwner === this.signal.id) {
+                stateChange.stateOwner = 0;
+            }
             let player = this.players.find(p => p.id === stateChange.stateOwner);
             if (player === undefined) {
                 console.log("[CLIENT] Creating new player")
@@ -87,8 +90,9 @@ export default class MPClient extends MultiPeerClient {
                 this.otherPlayers.sort((a, b) => +(a.id > b.id));
                 this.players.sort((a, b) => +(a.id > b.id));
             }
+            let stateProperty = stateChange.action === actionType.stateChange ? 'state' : 'privateState';
             player.pauseObservable();
-            StateUtils.applyStateChange(player, 'state', stateChange, true);
+            StateUtils.applyStateChange(player, stateProperty, stateChange, true);
             player.resumeObservable();
             this.emit("player-state-change", player, stateChange);
         }

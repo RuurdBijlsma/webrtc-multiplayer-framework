@@ -53,4 +53,10 @@ export default class PrivatePlayer extends Player {
     get privateState() {
         return this._privateState;
     }
+
+    destroy() {
+        super.destroy();
+        Observable.remove(this.privateState);
+        Observable.remove(this.state);
+    }
 }
