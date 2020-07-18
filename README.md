@@ -58,7 +58,7 @@ Contains an instance of MPClient class, which starts connecting when `joinRoom` 
 
 Create room on given server URL. If there is no connection to that server yet, the connection will be created. Calling this will make the current user of the Multiplayer class a host/server.
 
-**`async joinRoom(url, name, password = '')`**
+**`async joinRoom(String url, String name, String password = '')`**
 
 Join existing room on given server URL. If there is no connection to that server yet, the connection will be created. Will return when connected a server in that room if there is one, else will also return.
 
