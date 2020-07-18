@@ -1,8 +1,6 @@
 export default class Player {
-    constructor(id, peer) {
+    constructor(id) {
         this.id = id;
-        this.peer = peer;
         this.state = {};
-        this.privateState = {};
     }
 }

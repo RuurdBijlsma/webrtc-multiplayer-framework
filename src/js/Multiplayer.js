@@ -4,21 +4,21 @@ import MPClient from "@/js/MPClient";
 
 //Multiplayer framework
 // [----------------- [TODO] ----------------] //
-// * webrtc
-// * auto state sharing
-// * make state observable?
 // * broadcasted game state (lobby/ingame/postgame/etc) (for people not in looking at a server browser)
 // * streams support
 // * lobby passwords
 // * only allow p2p connection when password is given, so this has to be in signalserver
 // * do some communication over the socket to find out more room info (surface level info for each server: rooms, room names, room user counts) (deeper info could be anything, game state/lobby state)
-// * send buffered at 60? tps
-// * host/not host support
 // * room name generator
 // * rooms list
 // * Check version of every client
 
 // [----------------- [DONE] ----------------] //
+// * host/not host support
+// * make state observable?
+// * auto state sharing
+// * send buffered at 60? tps
+// * webrtc
 // * update meshserver? (make npm module?)
 // * in meshserver, include both mesh and server/client structure (server is one of the peers)
 // * Change signalserver to support server/client peer to peer structure

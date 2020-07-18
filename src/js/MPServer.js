@@ -1,6 +1,6 @@
 import {MultiPeerServer} from "multi-peer";
 import {actionType, actionNames, stateChangeType, stateChangeTypeNames} from './enums';
-import Player from "@/js/Player";
+import ServerPlayer from "./ServerPlayer";
 import Observable from "observable-slim";
 import StateUtils from "./StateUtils";
 //state change template
@@ -25,7 +25,7 @@ export default class MPServer extends MultiPeerServer {
         });
         this.on('connect', id => {
             console.log("Server new connection", id, this.players);
-            let newPlayer = new Player(id, this.peers[id]);
+            let newPlayer = new ServerPlayer(id, this.peers[id]);
             for (let player of this.players) {
                 console.log("Sending state data of player", player.id, "to player", id);
                 this.stateUtils.sendStateChange(d => this.send(id, d), id, player.id,
@@ -75,6 +75,9 @@ export default class MPServer extends MultiPeerServer {
                         this.emit("player-private-state-change", player);
                     }
                     break;
+                default:
+                    this.emit('action', action, rest);
+                    break;
             }
         });
     }
@@ -88,7 +91,9 @@ export default class MPServer extends MultiPeerServer {
                 this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', 0,
                     actionType.stateChange, stateChangeType[change.type], change.currentPath, change.newValue);
             }
+            this.emit("server-state-change", this._state);
         });
+        this.emit("server-state-change", this._state);
         console.log("[SERVER] sending reset action to all clients")
         this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', 0,
             actionType.stateChange, stateChangeType.reset, '', value);

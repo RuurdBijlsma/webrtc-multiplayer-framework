@@ -43,7 +43,7 @@ export default class MPClient extends MultiPeerClient {
                         let player = this.otherPlayers.find(p => p.id === stateOwner);
                         if (player === undefined) {
                             console.log("[CLIENT] Creating new player")
-                            player = new Player(stateOwner, null);
+                            player = new Player(stateOwner);
                             this.otherPlayers.push(player);
                         }
                         console.log('[CLIENT]', {
@@ -55,6 +55,9 @@ export default class MPClient extends MultiPeerClient {
                         this.stateUtils.applyStateChange(player, 'state', changeType, propertyString, value);
                         this.emit("player-state-change", player);
                     }
+                    break;
+                default:
+                    this.emit('action', action, rest);
                     break;
             }
         });
