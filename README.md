@@ -113,7 +113,7 @@ In the Multiplayer class there is an instance of a server and a client. Both hav
 * `connect` args:`(String peerId)` - New connection to a client
 * `disconnect` args:`(String peerId)` - Disconnected from a client 
 * `full-connect` - Connected to all clients in room
-* `action` args:`(Int actionType, Array[] args)` - Received action from one of the clients, arguments can be set by sender
+* `message` args:`(Any data)` - Received message from one of the clients, data type is set by the sender.
 * `player-state-change` args:`(Player player)` - State of player changed
 * `player-private-state-change` args:`(Player player)` - Private state of player changed
 * `server-state-change` args:`(Object serverState)` - State of server changed
@@ -122,7 +122,7 @@ In the Multiplayer class there is an instance of a server and a client. Both hav
 
 * `connect` args:`(String peerId)` - New connection to server
 * `disconnect` args:`(String peerId)` - Disconnected from server
-* `action` args:`(Int actionType, Array[] args)` - Received action from the server, arguments can be set by sender
+* `message` args:`(Any data)` - Received message from the server, data type is set by the sender.
 * `player-state-change` args:`(Player player)` - State of player changed
 * `player-private-state-change` args:`(Player player)` - Private state of current client player changed
 * `server-state-change` args:`(Object serverState)` - State of server changed

@@ -1,4 +1,5 @@
 import {stateChangeType, actionType} from "@/js/enums";
+import StateChange from "./StateChange";
 //state change template
 //[action, stateChangeOrigin (0 or playerId), changeType, propertyName, value]
 
@@ -13,7 +14,7 @@ export default class StateUtils {
             this.lastReceives[sender] = [];
         let result = this.fromSmart(this.lastReceives[sender].slice(0, 4), receiveArray);
         this.lastReceives[sender] = result;
-        return result;
+        return StateChange.fromArray(result);
     }
 
     fromSmart(lastReceive, receiveArray) {
@@ -39,18 +40,32 @@ export default class StateUtils {
         }
     }
 
-    sendStateChange(sendFunction, recipient, stateOwner, actionType, changeType, propertyString, value) {
-        let sendArray = [actionType, stateOwner, changeType, propertyString, value];
+    sendStateChange(sendFunction, recipient, stateChange) {
         if (!this.lastSends[recipient])
             this.lastSends[recipient] = [];
-        let smart = this.toSmart(this.lastSends[recipient], sendArray);
-        this.lastSends[recipient] = sendArray;
+        let smart = this.toSmart(this.lastSends[recipient], stateChange.array);
+        this.lastSends[recipient] = stateChange.array;
         return sendFunction(smart);
     }
 
-    applyStateChange(outerObject, statePropertyName, changeType, propertyString, value) {
+    static isStateChange(data) {
+        if (!Array.isArray(data)) {
+            return false;
+        }
+        return [
+            actionType.privateStateChange,
+            actionType.stateChange,
+            actionType.smartStateChange,
+            actionType.privateSmartStateChange
+        ].includes(data[0]);
+    }
+
+    static applyStateChange(outerObject, statePropertyName, stateChange, pauseObservable) {
+        if (pauseObservable && outerObject.pauseObservable !== undefined)
+            outerObject.pauseObservable();
+
         let refObject = outerObject[statePropertyName];
-        let properties = propertyString.split('.');
+        let properties = stateChange.propertyName.split('.');
         for (let property of properties.slice(0, -1))
             refObject = refObject[property];
         let finalProperty = properties[properties.length - 1];
@@ -61,18 +76,21 @@ export default class StateUtils {
             return;
         }
 
-        switch (changeType) {
+        switch (stateChange.changeType) {
             case stateChangeType.reset:
-                console.log("resetting player.state to", value);
-                outerObject[statePropertyName] = value;
+                console.log("resetting player.state to", stateChange.value);
+                outerObject[statePropertyName] = stateChange.value;
                 break;
             case stateChangeType.add:
             case stateChangeType.update:
-                refObject[finalProperty] = value;
+                refObject[finalProperty] = stateChange.value;
                 break;
             case stateChangeType.delete:
                 delete refObject[finalProperty];
                 break;
         }
+
+        if (pauseObservable && outerObject.resumeObservable !== undefined)
+            outerObject.resumeObservable();
     }
 }

@@ -3,6 +3,7 @@ import Observable from "observable-slim";
 import {actionType, stateChangeType, stateChangeTypeNames} from './enums';
 import Player from "./Player";
 import StateUtils from "./StateUtils";
+import PrivatePlayer from "./PrivatePlayer";
 //state change template
 //[action, stateChangeOrigin (0 or playerId), changeType, propertyName, value]
 
@@ -10,96 +11,72 @@ export default class MPClient extends MultiPeerClient {
     constructor(appName) {
         super(appName, false);
         this.stateUtils = new StateUtils();
-        this.state = {};
-        this.serverState = {};
-        // Private state is only shared with the server, not other players
-        this.privateState = {}
 
         //Refers to players besides this client, i.e. other players
         this.otherPlayers = [];
-        this.me = new Player('me');
-        this.me.state = this.state;
+        this.me = new PrivatePlayer();
+        this.players = [this.me];
+
+        this.serverState = {};
+        this.state = {};
+        // Private state is only shared with the server, not other players
+        this.privateState = {}
 
         this.setListeners();
     }
 
-    get players() {
-        return [...this.otherPlayers, this.me];
+    get state() {
+        return this.me.state;
     }
 
-    setListeners() {
-        this.on('data', (id, data) => {
-            console.log("[CLIENT]data", data);
-            let [action, ...rest] = this.stateUtils.receiveStateChange(id, data);
-            switch (action) {
-                case actionType.stateChange:
-                    let [stateOwner, changeType, propertyString, value] = rest;
-                    console.log("[CLIENT] Receiving state change event", stateOwner)
-                    if (stateOwner === 0) {
-                        this.stateUtils.applyStateChange(this, 'serverState', changeType, propertyString, value);
-                        this.emit("server-state-change", this.serverState);
-                    } else {
-                        console.log("[CLIENT] Receiving state change event on player state")
-                        let player = this.otherPlayers.find(p => p.id === stateOwner);
-                        if (player === undefined) {
-                            console.log("[CLIENT] Creating new player")
-                            player = new Player(stateOwner);
-                            this.otherPlayers.push(player);
-                        }
-                        console.log('[CLIENT]', {
-                            stateOwner,
-                            changeType: stateChangeTypeNames[changeType],
-                            propertyString,
-                            value
-                        });
-                        this.stateUtils.applyStateChange(player, 'state', changeType, propertyString, value);
-                        this.emit("player-state-change", player);
-                    }
-                    break;
-                default:
-                    this.emit('action', action, rest);
-                    break;
-            }
-        });
-    }
-
-    set privateState(value) {
-        Observable.remove(this._privateState);
-        this._privateState = Observable.create(value, false, changes => {
-            console.log('[CLIENT] private state change', changes);
-            for (let change of changes) {
-                this.stateUtils.sendStateChange(d => this.send(d), 0, 0,
-                    actionType.privateStateChange, stateChangeType[change.type], change.currentPath, change.newValue);
-            }
-            this.emit("player-private-state-change", this.me);
-        });
-        this.emit("player-private-state-change", this.me);
-        console.log("[CLIENT] sending private state reset action to server");
-        this.stateUtils.sendStateChange(d => this.send(d), 0, 0,
-            actionType.privateStateChange, stateChangeType.reset, '', value);
+    set state(v) {
+        this.me.state = v;
     }
 
     get privateState() {
-        return this._privateState;
+        return this.me.privateState;
     }
 
-    set state(value) {
-        Observable.remove(this._state);
-        this._state = Observable.create(value, false, changes => {
-            console.log('[CLIENT] state change', changes);
-            for (let change of changes) {
-                this.stateUtils.sendStateChange(d => this.send(d), 0, 0,
-                    actionType.stateChange, stateChangeType[change.type], change.currentPath, change.newValue);
-            }
-            this.emit("player-state-change", this.me);
+    set privateState(v) {
+        this.me.privateState = v;
+    }
+
+    setListeners() {
+        this.me.on('state-change', stateChange => {
+            this.stateUtils.sendStateChange(d => this.send(d), 0, stateChange);
+            this.emit('player-state-change', this.me, stateChange);
         });
-        this.emit("player-state-change", this.me);
-        console.log("[CLIENT] sending reset action to server");
-        this.stateUtils.sendStateChange(d => this.send(d), 0, 0,
-            actionType.stateChange, stateChangeType.reset, '', value);
-    }
-
-    get state() {
-        return this._state;
+        this.me.on('private-state-change', stateChange => {
+            this.stateUtils.sendStateChange(d => this.send(d), 0, stateChange);
+            this.emit('player-private-state-change', this.me, stateChange);
+        });
+        this.on('data', (id, data) => {
+            console.log("[CLIENT]data", data);
+            if (!StateUtils.isStateChange(data)) {
+                this.emit('message', data);
+                return;
+            }
+            let stateChange = this.stateUtils.receiveStateChange(id, data);
+            if (stateChange.stateOwner === 0) {
+                console.log("[CLIENT] Server state change received", stateChange)
+                StateUtils.applyStateChange(this, 'serverState', stateChange);
+                this.emit("server-state-change", this.serverState, stateChange);
+            } else {
+                console.log("[CLIENT] Player state change received", stateChange)
+                let player = this.players.find(p => p.id === stateChange.stateOwner);
+                if (player === undefined) {
+                    console.log("[CLIENT] Creating new player")
+                    player = new Player(stateChange.stateOwner);
+                    this.otherPlayers.push(player);
+                    this.players.push(player);
+                    this.otherPlayers.sort((a, b) => +(a.id > b.id));
+                    this.players.sort((a, b) => +(a.id > b.id));
+                }
+                player.pauseObservable();
+                StateUtils.applyStateChange(player, 'state', stateChange, true);
+                player.resumeObservable();
+                this.emit("player-state-change", player, stateChange);
+            }
+        });
     }
 }
