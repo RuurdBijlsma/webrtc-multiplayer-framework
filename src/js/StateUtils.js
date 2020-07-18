@@ -17,7 +17,7 @@ export default class StateUtils {
     }
 
     fromSmart(lastReceive, receiveArray) {
-        if (receiveArray[0] === actionType.smartStateChange) {
+        if (receiveArray[0] === actionType.smartStateChange || receiveArray[0] === actionType.privateSmartStateChange) {
             return lastReceive.concat([receiveArray[1]]);
         } else {
             return receiveArray;
@@ -33,14 +33,14 @@ export default class StateUtils {
             changeTypeA === changeTypeB &&
             propertyStringA === propertyStringB
         ) {
-            return [actionType.smartStateChange, value];
+            return [actionA === actionType.stateChange ? actionType.smartStateChange : actionType.privateSmartStateChange, value];
         } else {
             return sendArray;
         }
     }
 
-    sendStateChange(sendFunction, recipient, stateOwner, changeType, propertyString, value) {
-        let sendArray = [actionType.stateChange, stateOwner, changeType, propertyString, value];
+    sendStateChange(sendFunction, recipient, stateOwner, actionType, changeType, propertyString, value) {
+        let sendArray = [actionType, stateOwner, changeType, propertyString, value];
         if (!this.lastSends[recipient])
             this.lastSends[recipient] = [];
         let smart = this.toSmart(this.lastSends[recipient], sendArray);

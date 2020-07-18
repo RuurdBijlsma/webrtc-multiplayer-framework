@@ -1,10 +1,14 @@
 export const actionType = {
     stateChange: 0,
     smartStateChange: 1,
+    privateStateChange: 2,
+    privateSmartStateChange: 3,
 }
 export const actionNames = {
     0: 'stateChange',
     1: 'smartStateChange',
+    2: 'privateStateChange',
+    3: 'privateSmartStateChange',
 }
 
 export const stateChangeType = {

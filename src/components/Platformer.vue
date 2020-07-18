@@ -1,6 +1,6 @@
 <template>
     <div class="platformer">
-        <canvas ref="canvas" class="canvas" width="500" height="500" @mousemove="changeBallPos"></canvas>
+        <canvas ref="canvas" class="canvas" width="500" height="500" @click="changeBallPos"></canvas>
     </div>
 </template>
 
@@ -48,19 +48,29 @@
         },
         methods: {
             render() {
-                this.animationFrame = requestAnimationFrame(this.render);
+                this.animationFrame = requestAnimationFrame(() => this.render());
                 this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+                if (this.host) {
+                    let i = 0;
+                    for (let player of this.mp.server.players) {
+                        this.context.fillStyle = 'black';
+                        this.context.font = '20px Arial'
+                        this.context.fillText(`Player ${i}: ${JSON.stringify(player.privateState)}`, 0, ++i * 30);
+                    }
+                }
+
                 for (let player of this.mp.client.players) {
-                    this.context.fillStyle = player.state?.color;
+                    this.context.fillStyle = player.state.color;
                     this.context.fillRect(player.state.ball?.x, player.state.ball?.y, 10, 10);
                 }
             },
             changeBallPos(e) {
-                let {top, left} = this.canvas?.getBoundingClientRect();
+                let {top, left} = this.canvas.getBoundingClientRect();
                 let x = e.pageX - left;
                 let y = e.pageY - top;
                 this.mp.client.state.ball = {x, y};
+                this.mp.client.privateState.secret = `SneakyXY: ${x},${y}`;
             },
         },
     }

@@ -1,5 +1,5 @@
 import {MultiPeerServer} from "multi-peer";
-import {actionType, stateChangeType, stateChangeTypeNames} from './enums';
+import {actionType, actionNames, stateChangeType, stateChangeTypeNames} from './enums';
 import Player from "@/js/Player";
 import Observable from "observable-slim";
 import StateUtils from "./StateUtils";
@@ -9,10 +9,13 @@ import StateUtils from "./StateUtils";
 export default class MPServer extends MultiPeerServer {
     constructor(appName) {
         super(appName, false);
-
         this.stateUtils = new StateUtils();
-        this.state = {};
         this.players = [];
+
+        this.state = {};
+        //For host migration
+        this.privateState = {};
+
         this.setListeners();
     }
 
@@ -25,11 +28,14 @@ export default class MPServer extends MultiPeerServer {
             let newPlayer = new Player(id, this.peers[id]);
             for (let player of this.players) {
                 console.log("Sending state data of player", player.id, "to player", id);
-                this.stateUtils.sendStateChange(d => this.send(id, d), id, player.id, stateChangeType.reset, '', player.state);
-                this.stateUtils.sendStateChange(d => this.send(player.id, d), player.id, id, stateChangeType.reset, '', newPlayer.state);
+                this.stateUtils.sendStateChange(d => this.send(id, d), id, player.id,
+                    actionType.stateChange, stateChangeType.reset, '', player.state);
+                this.stateUtils.sendStateChange(d => this.send(player.id, d), player.id, id,
+                    actionType.stateChange, stateChangeType.reset, '', newPlayer.state);
             }
             this.players.push(newPlayer);
-            this.stateUtils.sendStateChange(d => this.send(id, d), id, 0, stateChangeType.reset, '', this.state);
+            this.stateUtils.sendStateChange(d => this.send(id, d), id, 0,
+                actionType.stateChange, stateChangeType.reset, '', this.state);
         });
         this.on('disconnect', id => {
             //Update remaining players that this player is gone!
@@ -45,13 +51,29 @@ export default class MPServer extends MultiPeerServer {
             let [action, ...rest] = this.stateUtils.receiveStateChange(id, data);
             switch (action) {
                 case actionType.stateChange:
+                case actionType.privateStateChange:
                     let [_, changeType, propertyString, value] = rest;
-                    console.log('[SERVER]', {changeType: stateChangeTypeNames[changeType], propertyString, value});
-                    for (let playerB of this.players.filter(p => p !== player)) {
-                        this.stateUtils.sendStateChange(d => this.send(playerB.id, d), playerB.id, player.id, changeType, propertyString, value);
+                    console.log('[SERVER]', {
+                        action: actionNames[action],
+                        changeType: stateChangeTypeNames[changeType],
+                        propertyString,
+                        value
+                    });
+                    let stateProperty = 'privateState';
+                    if (action === actionType.stateChange) {
+                        stateProperty = 'state';
+                        //Share player state to all other players
+                        for (let playerB of this.players.filter(p => p !== player)) {
+                            this.stateUtils.sendStateChange(d => this.send(playerB.id, d), playerB.id, player.id,
+                                actionType.stateChange, changeType, propertyString, value);
+                        }
                     }
-                    this.stateUtils.applyStateChange(player, 'state', changeType, propertyString, value);
-                    this.emit("player-state-change", player);
+                    this.stateUtils.applyStateChange(player, stateProperty, changeType, propertyString, value);
+                    if (action === actionType.stateChange) {
+                        this.emit("player-state-change", player);
+                    } else {
+                        this.emit("player-private-state-change", player);
+                    }
                     break;
             }
         });
@@ -63,11 +85,13 @@ export default class MPServer extends MultiPeerServer {
             console.log('[SERVER] state change', changes);
             for (let change of changes) {
                 this.broadcast([actionType.stateChange, 0, stateChangeType[change.type], change.currentPath, change.newValue]);
-                this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', 0, stateChangeType[change.type], change.currentPath, change.newValue);
+                this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', 0,
+                    actionType.stateChange, stateChangeType[change.type], change.currentPath, change.newValue);
             }
         });
         console.log("[SERVER] sending reset action to all clients")
-        this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', 0, stateChangeType.reset, '', value);
+        this.stateUtils.sendStateChange(d => this.broadcast(d), 'all', 0,
+            actionType.stateChange, stateChangeType.reset, '', value);
     }
 
     get state() {
