@@ -55,7 +55,7 @@ export default class MPClient extends MultiPeerClient {
             this.me.id = this.signal.id;
         });
         this.on('data', (id, data) => {
-            console.log("[CLIENT]data", data);
+            // console.log("[CLIENT]data", data);
             if (!Utils.isReservedData(data)) {
                 this.emit('message', id, data);
                 return;
@@ -76,11 +76,11 @@ export default class MPClient extends MultiPeerClient {
     handleStateChange(id, data) {
         let stateChange = this.stateUtils.receiveStateChange(id, data);
         if (stateChange.stateOwner === 0) {
-            console.log("[CLIENT] Server state change received", stateChange)
+            // console.log("[CLIENT] Server state change received", stateChange)
             StateUtils.applyStateChange(this, 'serverState', stateChange);
             this.emit("server-state-change", this.serverState, stateChange);
         } else {
-            console.log("[CLIENT] Player state change received", stateChange)
+            // console.log("[CLIENT] Player state change received", stateChange)
             // if (stateChange.stateOwner === this.signal.id) {
             //     stateChange.stateOwner = 0;
             // }

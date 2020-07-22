@@ -58,7 +58,7 @@ export default class MPServer extends MultiPeerServer {
             }
         });
         this.on('data', (id, data) => {
-            console.log("[SERVER] data", data);
+            // console.log("[SERVER] data", data);
             if (!Utils.isReservedData(data)) {
                 this.emit('message', id, data);
                 return;
@@ -73,7 +73,7 @@ export default class MPServer extends MultiPeerServer {
         let player = this.players.find(p => p.id === id);
         let stateChange = this.stateUtils.receiveStateChange(id, data);
         stateChange.stateOwner = id;
-        console.log('[SERVER] state change', stateChange);
+        // console.log('[SERVER] state change', stateChange);
         let stateProperty = 'privateState';
         if (stateChange.action === actionType.stateChange) {
             stateProperty = 'state';
